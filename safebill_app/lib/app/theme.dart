@@ -18,7 +18,7 @@ class SafeBillTheme {
   static const indigo200 = Color(0xFFC7D2FE);
   static const indigo500 = Color(0xFF6366F1);
   static const indigo600 = Color(0xFF4F46E5);
-  
+
   static const rose500 = Color(0xFFF43F5E);
   static const emerald500 = Color(0xFF10B981);
   static const amber500 = Color(0xFFF59E0B);
@@ -28,11 +28,8 @@ class SafeBillTheme {
   }
 
   static ThemeData light() {
-    final base = ThemeData(
-      brightness: Brightness.light,
-      useMaterial3: true,
-    );
-    
+    final base = ThemeData(brightness: Brightness.light, useMaterial3: true);
+
     return base.copyWith(
       scaffoldBackgroundColor: slate50,
       colorScheme: base.colorScheme.copyWith(
@@ -45,10 +42,9 @@ class SafeBillTheme {
         error: rose500,
         outline: slate200,
       ),
-      textTheme: _buildTextTheme(base.textTheme).apply(
-        bodyColor: slate900,
-        displayColor: slate900,
-      ),
+      textTheme: _buildTextTheme(
+        base.textTheme,
+      ).apply(bodyColor: slate900, displayColor: slate900),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
         foregroundColor: slate900,
@@ -68,11 +64,8 @@ class SafeBillTheme {
   }
 
   static ThemeData dark() {
-    final base = ThemeData(
-      brightness: Brightness.dark,
-      useMaterial3: true,
-    );
-    
+    final base = ThemeData(brightness: Brightness.dark, useMaterial3: true);
+
     return base.copyWith(
       scaffoldBackgroundColor: slate950,
       colorScheme: base.colorScheme.copyWith(
@@ -85,10 +78,9 @@ class SafeBillTheme {
         error: rose500,
         outline: slate800,
       ),
-      textTheme: _buildTextTheme(base.textTheme).apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ),
+      textTheme: _buildTextTheme(
+        base.textTheme,
+      ).apply(bodyColor: Colors.white, displayColor: Colors.white),
       appBarTheme: const AppBarTheme(
         backgroundColor: slate900,
         foregroundColor: Colors.white,

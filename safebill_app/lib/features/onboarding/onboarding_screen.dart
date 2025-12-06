@@ -5,9 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-import '../locker/locker_screen.dart';
+import '../auth/landing_screen.dart';
 import 'onboarding_controller.dart';
 import '../../app/theme.dart';
+import '../../app/theme_toggle.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -24,7 +25,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     ref.listen(onboardingControllerProvider, (previous, next) {
       if (next is AsyncData<bool> && next.value) {
-        context.go(LockerScreen.routePath);
+        context.go(LandingScreen.routePath);
       }
     });
 
@@ -53,28 +54,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Positioned(
             top: MediaQuery.of(context).size.height * 0.1,
             left: MediaQuery.of(context).size.width * 0.5 - 150,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                color: SafeBillTheme.indigo500.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(150),
-                boxShadow: [
-                  BoxShadow(
-                    color: SafeBillTheme.indigo500.withOpacity(0.2),
-                    blurRadius: 80,
-                    spreadRadius: 20,
-                  ),
-                ],
-              ),
-            )
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scale(
-                    begin: const Offset(0.8, 0.8),
-                    end: const Offset(1.2, 1.2),
-                    duration: 3.seconds,
-                    curve: Curves.easeInOut)
-                .fadeIn(duration: 1.seconds),
+            child:
+                Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        color: SafeBillTheme.indigo500.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(150),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SafeBillTheme.indigo500.withOpacity(0.2),
+                            blurRadius: 80,
+                            spreadRadius: 20,
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                      begin: const Offset(0.8, 0.8),
+                      end: const Offset(1.2, 1.2),
+                      duration: 3.seconds,
+                      curve: Curves.easeInOut,
+                    )
+                    .fadeIn(duration: 1.seconds),
           ),
 
           // Main Content
@@ -85,6 +88,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [ThemeToggleButton()],
+                  ),
+                  const SizedBox(height: 12),
                   Expanded(
                     flex: 4,
                     child: Center(
@@ -96,7 +104,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           _HeroCard()
                               .animate()
                               .scale(
-                                  duration: 600.ms, curve: Curves.easeOutBack)
+                                duration: 600.ms,
+                                curve: Curves.easeOutBack,
+                              )
                               .fadeIn(duration: 600.ms),
                         ],
                       ),
@@ -116,11 +126,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         const SizedBox(height: 24),
                         Text(
                           'SafeBill organizes your messy bills. Our AI extracts warranty terms, reminds you of expiry, and helps fight denied claims.',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: SafeBillTheme.slate400,
-                                    height: 1.5,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: SafeBillTheme.slate400,
+                                height: 1.5,
+                              ),
                         ).animate(delay: 400.ms).fadeIn(),
                         const SizedBox(height: 32),
                         _Checklist().animate(delay: 600.ms).fadeIn(),
@@ -238,9 +248,11 @@ class _HeroCard extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.scanLine,
-                    size: 80,
-                    color: SafeBillTheme.indigo500.withOpacity(0.9)),
+                Icon(
+                  LucideIcons.scanLine,
+                  size: 80,
+                  color: SafeBillTheme.indigo500.withOpacity(0.9),
+                ),
                 const SizedBox(height: 16),
                 Container(
                   width: 160,
@@ -252,12 +264,12 @@ class _HeroCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       Container(
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: SafeBillTheme.indigo500,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      )
+                            width: 100,
+                            decoration: BoxDecoration(
+                              color: SafeBillTheme.indigo500,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          )
                           .animate(onPlay: (c) => c.repeat())
                           .shimmer(duration: 1.5.seconds),
                     ],
@@ -306,16 +318,17 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: SafeBillTheme.indigo500.withOpacity(0.1),
-        border: Border.all(
-            color: SafeBillTheme.indigo500.withOpacity(0.2)),
+        border: Border.all(color: SafeBillTheme.indigo500.withOpacity(0.2)),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.sparkles,
-              size: 12,
-              color: SafeBillTheme.indigo500.withOpacity(0.8)),
+          Icon(
+            LucideIcons.sparkles,
+            size: 12,
+            color: SafeBillTheme.indigo500.withOpacity(0.8),
+          ),
           const SizedBox(width: 6),
           Text(
             'AI-POWERED PROTECTION',
@@ -338,11 +351,11 @@ class _Title extends StatelessWidget {
     return RichText(
       text: TextSpan(
         style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              height: 1.1,
-              fontWeight: FontWeight.w600,
-              fontSize: 32,
-            ),
+          color: Colors.white,
+          height: 1.1,
+          fontWeight: FontWeight.w600,
+          fontSize: 32,
+        ),
         children: [
           const TextSpan(text: 'Never lose a\n'),
           TextSpan(
@@ -389,18 +402,22 @@ class _ChecklistItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: SafeBillTheme.emerald500.withOpacity(0.2),
             border: Border.all(
-                color: SafeBillTheme.emerald500.withOpacity(0.2)),
+              color: SafeBillTheme.emerald500.withOpacity(0.2),
+            ),
             shape: BoxShape.circle,
           ),
-          child: const Icon(LucideIcons.check,
-              size: 12, color: SafeBillTheme.emerald500),
+          child: const Icon(
+            LucideIcons.check,
+            size: 12,
+            color: SafeBillTheme.emerald500,
+          ),
         ),
         const SizedBox(width: 12),
         Text(
           text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: SafeBillTheme.slate300,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: SafeBillTheme.slate300),
         ),
       ],
     );

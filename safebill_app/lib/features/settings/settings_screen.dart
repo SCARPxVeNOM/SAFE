@@ -20,9 +20,7 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           ListTile(
@@ -75,14 +73,18 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.data_exploration_outlined),
             title: const Text('Export data'),
-            subtitle: const Text('Generate an encrypted export of all documents.'),
+            subtitle: const Text(
+              'Generate an encrypted export of all documents.',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {},
           ),
           ListTile(
             leading: const Icon(Icons.delete_forever_outlined),
             title: const Text('Delete account'),
-            subtitle: const Text('Trigger GDPR/CPA-compliant deletion workflow.'),
+            subtitle: const Text(
+              'Trigger GDPR/CPA-compliant deletion workflow.',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {},
           ),
