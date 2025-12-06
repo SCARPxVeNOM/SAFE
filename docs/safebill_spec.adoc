@@ -1,0 +1,305 @@
+== SafeBill — AI-powered Warranty & Guarantee Manager
+
+=== 1. Product Overview
+SafeBill is a hybrid local/cloud platform that lets Indian consumers scan, store, and act on invoices, warranties, and denial letters. A Flutter mobile client captures documents, performs on-device OCR, and syncs to a Firebase-backed server that runs deterministic + LLM-based parsers, reminder schedulers, and a RAG + GraphRAG assistant. Core value pillars:
+
+* Retention of proof: encrypted digital locker for raw images, OCR text, and structured metadata.
+* Time-bound action: configurable reminder pipeline (local + push) tied to warranty expiry and claim follow-ups.
+* Guidance + automation: AI assistant that answers questions, summarizes clauses, drafts claims, and analyzes denials.
+* Compliance + privacy: local-only mode, Indian data locality options, PII redaction, and export/delete tooling.
+
+Primary personas include individual consumers, household managers, and partner service centers who need dashboards for analytics and intervention.
+
+=== 2. Complete Feature List
+
+*Scan & Upload*
+* Camera + PDF upload with auto-crop, deskew, compression.
+* Multi-item invoice capture via region selection or auto-segmentation.
+* Offline queueing with sync banners.
+
+*Automated Extraction*
+* Hybrid parser: regex + heuristics for dates, GSTIN, amounts, invoice numbers.
+* OpenAI Responses API prompt for semantics and fallback extraction.
+* Fields: product_name, model, invoice_no, purchase_date, purchase_price, gstin, seller_name, warranty_months, warranty_start, warranty_end, warranty_conditions, extended_warranty_purchased, service_centers, serial_no, return_window_days, warranty_notes, service center contacts.
+* Confidence scoring + highlight uncertain spans; manual correction loop feeds retraining dataset.
+
+*Digital Locker*
+* Stores original encrypted media, raw OCR text, parsed metadata, correction logs.
+* Handles multi-item invoices (parent doc + child item nodes).
+* Device indicator (local-only vs cloud replicated) and verification status.
+
+*Reminders*
+* flutter_local_notifications for on-device alerts.
+* Firestore reminder docs + Cloud Scheduler/Functions to trigger FCM push at 1 month, 1 week, 3 days, 1 day (user adjustable).
+* Deduplicated schedules for multiple warranties; snooze + mark-as-done.
+
+*AI Assistant (RAG + GraphRAG)*
+* RAG chat that retrieves top-K chunks (K=3–5) from vector DB (text-embedding-3-small or -large) and returns grounded answers with citations.
+* Graph augmentation: nodes (product, seller, service_center, policy, law_snippet, user_claim); edges: sold_by, serviced_by, covered_by, denies_claim_for.
+* Natural question support and fallback “I don’t know” guidance.
+
+*Summaries & Clause Translation*
+* Produces one-line summary, 3 bullet consumer-friendly recap, bolded critical exceptions.
+* Supports long vs short summary variants for SMS/email.
+
+*Claim Assistance*
+* Wizard with pre-filled data, localized templates (email, PDF, forms).
+* Consumer Protection Act 2019 highlights inline.
+* Denial analyzer: classify denial reason, cross-reference KB, recommend appeal + generate letter.
+
+*Service Booking (Opt-in)*
+* Integrations with retailer/service center APIs to auto-book slots; preserves consent state in profile.
+
+*Privacy & Security*
+* Encryption at rest (AES-256) and TLS/HSTS.
+* Local-only mode toggle, offline OCR path.
+* PII redaction before embedding; data locality options.
+* Export/delete user data workflow, retention policy, consent ledger.
+
+*Admin / Partner Portal*
+* Dashboards for service centers to view assigned claims, update statuses.
+* Seller integrations for analytics, reminder reliability, claim outcomes.
+
+*Analytics & Metrics*
+* Tracks reminders delivered, claims created, successful redemptions, DAU/MAU, retention, vector DB latency, extraction accuracy.
+
+=== 3. System Architecture
+
+*Mobile App (Flutter)*
+* Packages: google_mlkit_text_recognition, image_picker, firebase_auth, cloud_firestore, firebase_storage, firebase_functions, flutter_local_notifications, dio, sqflite.
+* Screens: Onboarding, Locker List (expiry badges), Scan, Parse/Edit, Document Detail, Reminder Config, Chat Assistant, Claim Wizard, Settings, Offline Sync Banner.
+* Local SQLite mirror stores pending docs, reminders, embeddings for offline RAG-lite; sync worker uploads when online.
+
+*Backend Stack (primary)*
+* Firebase Auth (OIDC option), Firestore, Firebase Storage, Cloud Functions (Node 20), Cloud Scheduler, Cloud Tasks, Pinecone (or Weaviate) for vectors, Neo4j Aura for graph, OpenAI APIs.
+* Secrets kept in GCP Secret Manager; Functions access via service accounts.
+
+*Alternative Stack*
+* Node.js/Express on Cloud Run, PostgreSQL, S3, Pinecone, Redis queue, Temporal for reminders.
+
+=== 4. Data Flow (step-by-step)
+
+1. Capture: Flutter app captures image/PDF → crop/deskew/compress.
+2. On-device OCR: ML Kit extracts text; produce confidence.
+3. Fallback: if confidence < threshold or offline mode disabled, upload to backend; backend can run Tesseract or Google Vision.
+4. Extraction service:
+   * Deterministic regex heuristics parse invoice_no, GSTIN, currency.
+   * OpenAI extraction prompt (Responses API) for structured JSON.
+   * Compose final metadata, compute warranty_start/end (purchase_date + warranty_months, adjust for disclaimers).
+5. Storage:
+   * Encrypted media stored in Firebase Storage (path `/users/{uid}/docs/{docId}.enc`).
+   * Firestore `documents` collection stores metadata, rawText, parser confidence, corrections list.
+   * `warrantyItems` subcollection per doc for multi-item invoices.
+6. Embedding ingestion:
+   * Cloud Function `/api/ingest` chunks rawText (500–1,200 tokens, 50–100 overlap) and uses text-embedding-3-small (default) or -large for higher recall.
+   * Upserts into Pinecone with metadata `{userId, docId, chunkIndex, snippet, createdAt}`.
+7. Knowledge graph:
+   * Neo4j nodes created/updated for product, seller, service_center, policy, law_snippet, user_claim; edges record relationships.
+   * Graph traversal service used to augment retrieval (GraphRAG).
+8. Reminder scheduling:
+   * Client schedules local notifications.
+   * Server writes reminder docs; Cloud Scheduler triggers Cloud Function to enqueue upcoming reminders into Cloud Tasks, which send FCM messages.
+9. Chat flow:
+   * `/api/chat` computes query embedding; vector DB topK search + GraphRAG traversal fetches related nodes.
+   * Build prompt with system instructions, citations, and user question.
+   * OpenAI chat/Responses generates answer; backend returns answer + sources.
+10. Claim flow:
+    * Claim wizard selects doc/warranty, pre-fills template, attaches evidence; can auto-send email or export PDF to share via WhatsApp/email.
+11. Denial analyzer:
+    * Upload denial message or screenshot; OCR + classifier tags reason, surfaces rights guidance, suggests actions, and triggers optional appeal letter generation.
+
+=== 5. Data Models (Firestore collections)
+
+*`users`*
+```
+uid, email, phone, locale, mode (local_only/cloud), consentFlags, createdAt, lastActive, defaultReminderOffsets
+```
+
+*`documents`*
+```
+docId, userId, title, rawText, ocrConfidence, parserVersion, status, encryptedMediaPath, createdAt, updatedAt
+```
+
+*`warrantyItems` (subcollection)*
+```
+itemId, product_name, model, invoice_no, purchase_date, purchase_price, gstin, seller_name, warranty_months, warranty_start, warranty_end, warranty_conditions, extended_warranty_purchased, service_centers, serial_no, return_window_days, warranty_notes, expiryBadgeColor
+```
+
+*`reminders`*
+```
+reminderId, userId, docId, itemId, triggerType, triggerAt, deliveryChannels, status, lastAttempt, snoozeUntil
+```
+
+*`claims`*
+```
+claimId, userId, docId, itemId, stage (draft/submitted/appeal), denialReason, generatedArtifacts, serviceCenterRef, history[]
+```
+
+*`denials`*
+```
+denialId, claimId, rawText, classification, suggestedNextSteps, appealLetterPath
+```
+
+*`graph_nodes`*
+```
+nodeId, type (product/seller/service_center/policy/law_snippet/user_claim), labels, properties, relatedDocIds[]
+```
+
+*`graph_edges`*
+```
+edgeId, fromNode, toNode, relation (sold_by/serviced_by/covered_by/denies_claim_for), weight
+```
+
+=== 6. API Endpoints
+
+*POST /api/extract*
+```
+Request:
+{
+  "userId": "u_123",
+  "docId": "doc_abc",
+  "rawText": "<OCR text here>"
+}
+
+Response:
+{
+  "ok": true,
+  "parsed": {
+    "product_name": "RealPhone X2",
+    "model": "X2-256",
+    "purchase_date": "2025-11-10",
+    "price": 23999,
+    "warranty_months": 12,
+    "warranty_start": "2025-11-10",
+    "warranty_end": "2026-11-09",
+    "seller_name": "BestShop India",
+    "invoice_no": "INV-98765",
+    "warranty_notes": "Manufacturer warranty; physical damage not covered."
+  }
+}
+```
+
+*POST /api/ingest*
+```
+{
+  "userId": "u_123",
+  "docId": "doc_abc",
+  "text": "<full OCR text or parsed warranty section>"
+}
+```
+
+*POST /api/chat*
+```
+Request:
+{
+  "userId": "u_123",
+  "question": "When does my phone warranty expire?"
+}
+
+Response:
+{
+  "ok": true,
+  "answer": "Your RealPhone X2 warranty ends on 2026-11-09 (doc: doc_abc, chunk: doc_abc_chunk_0). Summary: ...",
+  "sources": [
+    {"docId": "doc_abc", "chunk": "doc_abc_chunk_0", "score": 0.82}
+  ]
+}
+```
+
+*Additional endpoints*
+* `/api/reminders/schedule` — upsert reminder configs.
+* `/api/claims/generate` — produce letter/email artifacts.
+* `/api/denials/analyze` — OCR/classify denial evidence.
+* `/api/admin/analytics` — partner dashboard metrics (auth restricted).
+
+=== 7. Prompt Templates
+
+*Extraction system prompt*
+```
+You are a structured-data extraction assistant. Input is raw OCR text from an Indian invoice or warranty document.
+
+Return ONLY a single JSON object with fields:
+product_name, model, invoice_no, purchase_date (YYYY-MM-DD), purchase_price (number), seller_name,
+gstin (or null), warranty_months (integer or null), warranty_notes (string or null),
+extended_warranty (true/false/null), service_centers (array or null).
+
+If a field is not present, set it to null. Do not add extra commentary.
+```
+
+*Clause summarization prompt*
+```
+Summarize the following warranty clause into (1) one-line summary, (2) 3-bullet consumer-friendly summary, (3) any critical exceptions in **bold**. Text: """<warranty clause>"""
+```
+
+*RAG system prompt*
+```
+You are SafeBill Assistant. Use ONLY the provided documents as facts. If the provided documents don't contain the answer, say "I don't know" and suggest next steps (ask for invoice or denial screenshot). When suggesting actions, include document IDs and short templates for emails/letters. Keep answers concise and provide sources (docId and chunk).
+```
+
+=== 8. GraphRAG Strategy
+
+* Chunking: 500–1,200 token windows with 50–100 overlap.
+* Embeddings: prefer text-embedding-3-small for cost; upgrade to -large for higher recall or for admin users.
+* Metadata: `{userId, docId, chunkIndex, snippet, createdAt}` stored alongside vector.
+* Retrieval: hybrid scoring (BM25 + dense). Base topK=3; expand to 5 if answer confidence < threshold.
+* Graph augmentation: map each chunk to graph node via `docId`. For queries referencing seller/service center, traverse nodes to fetch adjacent chunks and append to context.
+* Answer generation: cite docId + chunk IDs; degrade gracefully with "I don't know" when unsupported.
+
+=== 9. Reminder & Notification Pipeline
+
+* Client schedules local notifications immediately after extraction (flutter_local_notifications).
+* For cloud mode, reminders saved in Firestore `reminders`. Cloud Scheduler invokes hourly function that looks 24h ahead, enqueues tasks in Cloud Tasks for precise delivery.
+* Cloud Function sends FCM push; service worker handles cross-device alerts and updates reminder status.
+* Configurable offsets: default {30d, 7d, 3d, 1d}; user may add custom offsets; UI exposes toggles per reminder.
+
+=== 10. Claim & Denial Workflows
+
+*Claim wizard*
+* Step 1: Choose document/item; confirm purchase details.
+* Step 2: Select issue type; fetch relevant policies via GraphRAG.
+* Step 3: Auto-generate claim letter/email/PDF referencing docId chunk citations.
+* Step 4: Provide submission checklist; optionally trigger email send via Cloud Function.
+
+*Denial analyzer*
+* Accepts denial text or screenshot; runs OCR + classifier (physical damage, water ingress, wear & tear, delay, unauthorized repair).
+* Matches reason with KB; suggests next steps, regulatory citations, and generates appeal letter.
+
+=== 11. Privacy, Compliance, Security
+
+* TLS + HSTS enforced on all endpoints.
+* AES-256 encryption at rest for Storage objects; Firestore field-level encryption for sensitive values; key rotation schedule documented.
+* Local-only mode ensures no network transmission; offline OCR results stored solely on device.
+* PII redaction pipeline for embeddings (mask phone numbers, GSTIN) before ingest.
+* Data locality: user preference to pin data to India region; Cloud Run/Firestore instances in `asia-south1`.
+* Data export/delete workflow (self-service) + audit logs.
+
+=== 12. Edge Cases & Fallbacks
+
+* Multi-item invoices: UI allows manual splitting; backend stores each as separate `warrantyItem`.
+* No date found: infer from file timestamp but mark `date_inferred=true` and prompt user to confirm.
+* Low OCR confidence (<0.7): show edit prompts, highlight uncertain spans, queue for review.
+* Offline users: queue actions locally; show "Sync pending" toast.
+* Denial uploads: support WhatsApp screenshots; highlight classification confidence.
+
+=== 13. Analytics & Metrics
+
+* Core KPIs: extraction accuracy ≥90% for key fields, reminder delivery success ≥99%, DAU/MAU ratio, 30-day retention, successful claim recovery %.
+* System metrics: vector DB latency, OCR fallback usage, denial classification accuracy, reminder queue backlog.
+* Partner dashboards: aggregated claim outcomes by seller/service center, denial reasons, response SLAs.
+
+=== 14. Testing Strategy
+
+* Unit tests: regex parser suite (100+ Indian invoice fixtures), reminder scheduling math, data model validations.
+* Integration tests: scan→extract→store; reminder creation→delivery; chat RAG flow; claim generation pipeline.
+* E2E (Flutter integration test + Firebase emulator).
+* Model eval: labeled test set for extraction and denial classifier accuracy.
+* Manual QA: test varied inputs (thermal receipts, handwritten, crumpled, email PDFs).
+
+=== 15. Deployment & Ops
+
+* Environments: dev (Firebase emulator suite), staging (restricted testers), prod.
+* CI/CD: Flutter build pipelines (Android/iOS), Cloud Functions deployment via GitHub Actions.
+* Monitoring: Firebase Crashlytics, Cloud Logging, Pinecone metrics, Neo4j Aura monitoring.
+* Incident response runbooks for OCR outages, OpenAI quota, reminder backlog.
+
+
