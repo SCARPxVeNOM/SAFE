@@ -3,12 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { FileSpreadsheet, Upload, Plus, LogOut, CheckCircle, Clock, User } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
-import { useThemeStore } from '@/lib/store/theme-store'
 
 export function MerchantDashboardScreen() {
   const router = useRouter()
-  const { resolvedTheme } = useThemeStore()
-  const isDark = resolvedTheme === 'dark'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500/10 via-slate-50 to-slate-50 dark:from-indigo-500/10 dark:via-slate-950 dark:to-slate-950">

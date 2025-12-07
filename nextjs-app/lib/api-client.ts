@@ -34,12 +34,12 @@ class ApiClient {
     return response.data;
   }
 
-  async post<T>(path: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async post<T>(path: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.post<T>(path, data, config);
     return response.data;
   }
 
-  async put<T>(path: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T>(path: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.put<T>(path, data, config);
     return response.data;
   }

@@ -19,15 +19,11 @@ import {
   Laptop,
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
-import { useThemeStore } from '@/lib/store/theme-store'
 import { apiClient } from '@/lib/api-client'
 import type { Document } from '@/lib/types'
-import { format } from 'date-fns'
 
 export function LockerScreen() {
   const router = useRouter()
-  const { resolvedTheme } = useThemeStore()
-  const isDark = resolvedTheme === 'dark'
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -132,7 +128,6 @@ export function LockerScreen() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <StatCard
-            isDark={isDark}
             icon={ShieldCheck}
             iconColor="emerald-500"
             label="Active"
@@ -140,7 +135,6 @@ export function LockerScreen() {
             subValue="Active Warranties"
           />
           <StatCard
-            isDark={isDark}
             icon={Wallet}
             iconColor="indigo-500"
             value={`₹${(totalValue / 1000).toFixed(1)}K`}
@@ -264,15 +258,13 @@ export function LockerScreen() {
 }
 
 function StatCard({
-  isDark,
   icon: Icon,
   iconColor,
   label,
   value,
   subValue,
 }: {
-  isDark: boolean
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   iconColor: string
   label?: string
   value: string
@@ -300,7 +292,7 @@ function NavItem({
   isActive = false,
   onClick,
 }: {
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   label: string
   isActive?: boolean
   onClick?: () => void

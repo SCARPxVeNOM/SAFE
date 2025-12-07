@@ -14,6 +14,7 @@ export function DocumentDetailScreen({ docId }: { docId: string }) {
 
   useEffect(() => {
     loadDocument()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docId])
 
   const loadDocument = async () => {
@@ -192,7 +193,7 @@ function InfoItem({
   label,
   value,
 }: {
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   label: string
   value: string
 }) {

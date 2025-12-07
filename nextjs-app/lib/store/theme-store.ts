@@ -20,7 +20,7 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'theme-storage',
-      storage: typeof window !== 'undefined' ? createJSONStorage(() => localStorage) : undefined as any,
+      storage: typeof window !== 'undefined' ? createJSONStorage(() => localStorage) : (undefined as unknown as ReturnType<typeof createJSONStorage>),
       skipHydration: true,
     }
   )

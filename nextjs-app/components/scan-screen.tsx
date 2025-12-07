@@ -28,7 +28,7 @@ export function ScanScreen() {
       formData.append('file', file)
       formData.append('userId', 'user123') // Get from auth
 
-      const response = await apiClient.postFormData<{ document: any }>('/ingest', formData)
+      const response = await apiClient.postFormData<{ document: { docId: string } }>('/ingest', formData)
 
       if (response.document) {
         router.push(`/document/${response.document.docId}`)

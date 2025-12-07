@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { OnboardingScreen } from '@/components/onboarding-screen'
 
 export default function Home() {

@@ -1,19 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 import { ArrowRight, Check, ScanLine, Sparkles } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
-import { useThemeStore } from '@/lib/store/theme-store'
 
 export function OnboardingScreen() {
   const router = useRouter()
-  const { resolvedTheme } = useThemeStore()
-  const isDark = resolvedTheme === 'dark'
-  const [completed, setCompleted] = useState(false)
 
   const handleComplete = () => {
-    setCompleted(true)
     router.push('/landing')
   }
 

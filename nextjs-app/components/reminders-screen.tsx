@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, AlarmOff, Timer, Bell } from 'lucide-react'
+import { ArrowLeft, BellOff, Timer, Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/api-client'
 import type { Reminder } from '@/lib/types'
@@ -48,7 +48,7 @@ export function RemindersScreen() {
             <div className="text-center py-12 text-slate-500">Loading...</div>
           ) : reminders.length === 0 ? (
             <div className="text-center py-12">
-              <AlarmOff className="w-16 h-16 text-indigo-500 mx-auto mb-4 opacity-50" />
+              <BellOff className="w-16 h-16 text-indigo-500 mx-auto mb-4 opacity-50" />
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
                 No reminders yet
               </h2>

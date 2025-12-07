@@ -2,20 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Chrome, Lock, User, LogOut } from 'lucide-react'
+import { Chrome, Lock, User } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
-import { useThemeStore } from '@/lib/store/theme-store'
 import { useAuthStore } from '@/lib/store/auth-store'
 import { apiClient } from '@/lib/api-client'
 import type { UserType } from '@/lib/types'
 
 export function LandingScreen() {
   const router = useRouter()
-  const { resolvedTheme } = useThemeStore()
-  const { setAuth, isAuthenticated } = useAuthStore()
+  const { setAuth } = useAuthStore()
   const [userType, setUserType] = useState<UserType>('consumer')
   const [isLoading, setIsLoading] = useState(false)
-  const isDark = resolvedTheme === 'dark'
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
@@ -186,7 +183,7 @@ export function LandingScreen() {
 
           {/* Sign Up Link */}
           <div className="text-center mt-6">
-            <span className="text-slate-600 dark:text-slate-400">Don't have an account? </span>
+            <span className="text-slate-600 dark:text-slate-400">Don&apos;t have an account? </span>
             <button className="text-indigo-500 font-semibold hover:text-indigo-600">
               Sign up
             </button>

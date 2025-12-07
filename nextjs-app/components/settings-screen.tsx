@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { ArrowLeft, Database, Trash2, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { ThemeToggle } from './theme-toggle'
 import { useThemeStore } from '@/lib/store/theme-store'
 
 export function SettingsScreen() {
