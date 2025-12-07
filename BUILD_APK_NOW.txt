@@ -1,0 +1,44 @@
+BUILD APK WITH YOUR RENDER URL
+================================
+
+Your Render URL: https://safe-jptl.onrender.com
+
+OPTION 1: BUILD NOW (If Android SDK is installed)
+--------------------------------------------------
+Run this command:
+
+cd safebill_app
+flutter build apk --release --dart-define=API_BASE_URL=https://safe-jptl.onrender.com/api
+
+Or use the script:
+.\build-apk.ps1
+
+The APK will be at:
+safebill_app/build/app/outputs/flutter-apk/app-release.apk
+
+OPTION 2: SETUP ANDROID SDK FIRST
+----------------------------------
+1. Install Android Studio: https://developer.android.com/studio
+2. Open Android Studio → SDK Manager
+3. Install Android SDK (API level 33 or higher)
+4. Set ANDROID_HOME environment variable:
+   - Windows: Set ANDROID_HOME=C:\Users\YourName\AppData\Local\Android\Sdk
+   - Add to PATH: %ANDROID_HOME%\platform-tools;%ANDROID_HOME%\tools
+5. Restart terminal and run the build command again
+
+OPTION 3: BUILD ON CI/CD (GitHub Actions)
+------------------------------------------
+Use GitHub Actions to build APK automatically. 
+I can set this up if you want.
+
+OPTION 4: USE EXISTING APK & UPDATE CONFIG
+------------------------------------------
+If you have an APK already, update the API URL in app and rebuild.
+Or we can create a web version that works immediately.
+
+NEXT STEPS:
+-----------
+1. Install Android SDK (Option 2) OR
+2. Let me know if you want GitHub Actions setup (Option 3) OR
+3. Test the backend first: curl https://safe-jptl.onrender.com/health
+

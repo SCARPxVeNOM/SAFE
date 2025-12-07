@@ -1,7 +1,7 @@
 # Build SafeBill APK with Render backend URL
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$RenderUrl
+    [Parameter(Mandatory=$false)]
+    [string]$RenderUrl = "https://safe-jptl.onrender.com"
 )
 
 Write-Host "🔨 Building SafeBill APK..." -ForegroundColor Cyan
