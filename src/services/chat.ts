@@ -1,6 +1,7 @@
 import { openaiClient } from '../clients/openaiClient';
 import { similaritySearch } from './embeddings';
 import { fetchRelatedGraphNodes } from './graph';
+import { logger } from '../utils/logger';
 import type { ChatResponsePayload } from '../types/models';
 
 const buildPrompt = (params: {
@@ -27,11 +28,21 @@ export const answerQuestion = async (params: {
   userId: string;
   question: string;
 }): Promise<ChatResponsePayload> => {
-  const matches = await similaritySearch({
-    userId: params.userId,
-    query: params.question,
-    topK: 5,
-  });
+  let matches: Array<{
+    docId: string;
+    chunk: string;
+    score: number;
+    textSnippet: string;
+  }> = [];
+  try {
+    matches = await similaritySearch({
+      userId: params.userId,
+      query: params.question,
+      topK: 5,
+    });
+  } catch (error) {
+    logger.warn({ error }, 'Similarity search failed, continuing without context');
+  }
 
   const entities = params.question
     .match(/[A-Za-z0-9]+/g)
@@ -56,12 +67,18 @@ export const answerQuestion = async (params: {
     ),
   });
 
-  const completion = await openaiClient.responses.create({
-    model: 'gpt-4.1-mini',
-    input: prompt,
+  const completion = await openaiClient.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'user',
+        content: prompt,
+      },
+    ],
+    temperature: 0.3,
   });
 
-  const answer = completion.output_text?.[0] ?? 'I could not generate an answer.';
+  const answer = completion.choices[0]?.message?.content ?? 'I could not generate an answer.';
 
   return {
     ok: true,

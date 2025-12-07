@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { createClaim } from '../services/claims';
-import { store } from '../store/inMemoryStore';
+import { store } from '../store/store';
 import { HttpError } from '../middleware/errorHandler';
 
 const schema = z.object({
@@ -13,10 +13,10 @@ const schema = z.object({
 
 export const claimsRouter = Router();
 
-claimsRouter.post('/generate', (req, res, next) => {
+claimsRouter.post('/generate', async (req, res, next) => {
   try {
     const body = schema.parse(req.body);
-    const document = store.getDocument(body.docId);
+    const document = await store.getDocument(body.docId);
     if (!document) {
       throw new HttpError(404, 'Document not found');
     }
@@ -26,7 +26,7 @@ claimsRouter.post('/generate', (req, res, next) => {
     if (!item) {
       throw new HttpError(404, 'Warranty item not found');
     }
-    const claim = createClaim({
+    const claim = await createClaim({
       userId: body.userId,
       document,
       item,

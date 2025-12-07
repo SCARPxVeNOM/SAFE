@@ -32,7 +32,7 @@ export const fetchRelatedGraphNodes = async (params: {
       `,
       {
         entities: params.entities,
-        limit: params.limit ?? 10,
+        limit: neo4j.int(params.limit ?? 10),
       },
     );
 

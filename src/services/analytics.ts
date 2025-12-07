@@ -1,4 +1,4 @@
-import { store } from '../store/inMemoryStore';
+import { store } from '../store/store';
 
 export const getAnalytics = () => store.getAnalyticsSummary();
 

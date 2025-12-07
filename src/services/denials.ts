@@ -1,4 +1,4 @@
-import { generateId, store } from '../store/inMemoryStore';
+import { generateId, store } from '../store/store';
 import { DenialRecord } from '../types/models';
 
 const classifyDenial = (text: string) => {
@@ -36,7 +36,7 @@ const buildNextSteps = (classification: string) => {
   }
 };
 
-export const analyzeDenial = (params: { claimId: string; rawText: string }) => {
+export const analyzeDenial = async (params: { claimId: string; rawText: string }) => {
   const classification = classifyDenial(params.rawText);
   const denial: DenialRecord = {
     denialId: generateId('denial'),
@@ -46,7 +46,7 @@ export const analyzeDenial = (params: { claimId: string; rawText: string }) => {
     suggestedNextSteps: buildNextSteps(classification),
     createdAt: new Date().toISOString(),
   };
-  store.upsertDenial(denial);
+  await store.upsertDenial(denial);
   return denial;
 };
 

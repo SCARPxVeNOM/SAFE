@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { store } from '../store/inMemoryStore';
+import { store } from '../store/store';
 import { extractDocument } from '../services/extraction';
 import { scheduleExpiryReminders } from '../services/reminders';
 import { HttpError } from '../middleware/errorHandler';
@@ -17,24 +17,27 @@ extractRouter.post('/', async (req, res, next) => {
   try {
     const body = schema.parse(req.body);
     const document = await extractDocument(body);
-    const reminders = document.items.flatMap((item) =>
-      scheduleExpiryReminders({
-        userId: body.userId,
-        docId: body.docId,
-        itemId: item.itemId,
-        warrantyEnd: item.warranty_end,
-      }),
+    const remindersArrays = await Promise.all(
+      document.items.map((item) =>
+        scheduleExpiryReminders({
+          userId: body.userId,
+          docId: body.docId,
+          itemId: item.itemId,
+          warrantyEnd: item.warranty_end,
+        }),
+      ),
     );
+    const reminders = remindersArrays.flat();
     res.json({ ok: true, document, reminders });
   } catch (error) {
     next(error);
   }
 });
 
-extractRouter.get('/:docId', (req, res, next) => {
+extractRouter.get('/:docId', async (req, res, next) => {
   try {
     const { docId } = z.object({ docId: z.string().min(1) }).parse(req.params);
-    const document = store.getDocument(docId);
+    const document = await store.getDocument(docId);
     if (!document) {
       throw new HttpError(404, `Document ${docId} not found`);
     }

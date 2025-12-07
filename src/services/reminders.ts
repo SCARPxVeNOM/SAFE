@@ -1,11 +1,11 @@
-import { generateId, store } from '../store/inMemoryStore';
+import { generateId, store } from '../store/store';
 import type { ReminderConfig } from '../types/models';
 import { computeReminderDates } from '../utils/dates';
 import { getEnv } from '../config/env';
 
 const env = getEnv();
 
-export const scheduleExpiryReminders = (params: {
+export const scheduleExpiryReminders = async (params: {
   userId: string;
   docId: string;
   itemId?: string;
@@ -14,7 +14,8 @@ export const scheduleExpiryReminders = (params: {
   if (!params.warrantyEnd) return [];
   const baseDate = new Date(params.warrantyEnd);
   const reminderDates = computeReminderDates(baseDate, env.DEFAULT_REMINDER_OFFSETS);
-  const reminders: ReminderConfig[] = reminderDates.map((triggerDate) => {
+  const reminders: ReminderConfig[] = [];
+  for (const triggerDate of reminderDates) {
     const reminder: ReminderConfig = {
       reminderId: generateId('rem'),
       userId: params.userId,
@@ -25,9 +26,9 @@ export const scheduleExpiryReminders = (params: {
       deliveryChannels: ['local', 'push'],
       status: 'scheduled',
     };
-    store.upsertReminder(reminder);
-    return reminder;
-  });
+    await store.upsertReminder(reminder);
+    reminders.push(reminder);
+  }
   return reminders;
 };
 

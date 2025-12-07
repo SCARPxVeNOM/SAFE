@@ -1,0 +1,75 @@
+DEPLOY SAFEBILL BACKEND TO RENDER
+==================================
+
+STEP 1: PREPARE REPOSITORY
+---------------------------
+1. Make sure your code is in a Git repository
+2. Push to GitHub/GitLab/Bitbucket
+
+STEP 2: CREATE RENDER SERVICE
+------------------------------
+1. Go to: https://dashboard.render.com/
+2. Click "New +" → "Web Service"
+3. Connect your repository
+4. Select the repository with SafeBill backend
+
+STEP 3: CONFIGURE SERVICE
+--------------------------
+Service Name: safebill-api
+Environment: Node
+Build Command: npm install && npm run build
+Start Command: npm start
+Plan: Free (or choose your plan)
+
+STEP 4: ADD ENVIRONMENT VARIABLES
+----------------------------------
+In Render dashboard, add these environment variables:
+
+Required:
+- OPENAI_API_KEY=your-key
+- MONGODB_URI=your-mongodb-uri
+- PINECONE_API_KEY=your-pinecone-key
+- PINECONE_INDEX=safebill
+- GRAPH_DB_URI=your-neo4j-uri
+- GRAPH_DB_USER=neo4j
+- GRAPH_DB_PASSWORD=your-password
+- NEXTAUTH_SECRET=your-secret-key
+- GOOGLE_CLIENT_ID=your-google-client-id
+- GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+Optional:
+- NODE_ENV=production
+- PORT=10000 (Render auto-sets this)
+- MONGODB_DB_NAME=safebill
+- NEXTAUTH_URL=https://your-service.onrender.com
+- FCM_SERVER_KEY=your-fcm-key
+
+STEP 5: DEPLOY
+--------------
+1. Click "Create Web Service"
+2. Render will build and deploy automatically
+3. Wait for deployment (3-5 minutes)
+4. Copy your service URL (e.g., https://safebill-api.onrender.com)
+
+STEP 6: BUILD APK WITH RENDER URL
+----------------------------------
+Once deployed, get your Render URL and run:
+
+.\build-apk.ps1 -RenderUrl "https://your-service.onrender.com"
+
+Or manually:
+cd safebill_app
+flutter build apk --release --dart-define=API_BASE_URL=https://your-service.onrender.com/api
+
+STEP 7: UPDATE GOOGLE OAUTH CALLBACK
+-------------------------------------
+In Google Cloud Console, update OAuth callback URL:
+https://your-service.onrender.com/api/auth/google/callback
+
+IMPORTANT NOTES:
+- Free tier services sleep after 15 mins of inactivity
+- First request after sleep takes 30-60 seconds
+- Upgrade to paid plan for always-on service
+- Update NEXTAUTH_URL to your Render URL
+- Allow CORS for your Render domain
+

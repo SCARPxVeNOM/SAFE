@@ -6,9 +6,13 @@ const bootstrap = async () => {
   const env = getEnv();
   const app = createServer();
 
-  app.listen(env.PORT, () => {
+  // Render sets PORT environment variable automatically
+  const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : env.PORT;
+  const host = process.env.HOST || '0.0.0.0';
+
+  app.listen(port, host, () => {
     logger.info(
-      { port: env.PORT, env: env.NODE_ENV },
+      { port, host, env: env.NODE_ENV },
       'SafeBill API server started',
     );
   });

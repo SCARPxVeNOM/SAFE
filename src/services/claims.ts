@@ -1,4 +1,4 @@
-import { generateId, store } from '../store/inMemoryStore';
+import { generateId, store } from '../store/store';
 import { ClaimRecord, DocumentRecord, WarrantyItem } from '../types/models';
 
 const buildClaimLetter = (params: {
@@ -28,7 +28,7 @@ const buildClaimLetter = (params: {
   ].join('\n');
 };
 
-export const createClaim = (params: {
+export const createClaim = async (params: {
   userId: string;
   document: DocumentRecord;
   item: WarrantyItem;
@@ -59,7 +59,7 @@ export const createClaim = (params: {
       },
     ],
   };
-  store.upsertClaim(claim);
+  await store.upsertClaim(claim);
   return claim;
 };
 

@@ -12,7 +12,7 @@ export class InMemoryStore {
   private claims = new Map<string, ClaimRecord>();
   private denials = new Map<string, DenialRecord>();
 
-  upsertDocument(doc: DocumentRecord) {
+  async upsertDocument(doc: DocumentRecord) {
     const now = new Date().toISOString();
     const existing = this.documents.get(doc.docId);
     const next: DocumentRecord = {
@@ -24,38 +24,38 @@ export class InMemoryStore {
     return next;
   }
 
-  getDocument(docId: string) {
+  async getDocument(docId: string) {
     return this.documents.get(docId);
   }
 
-  listDocuments(userId: string) {
+  async listDocuments(userId: string) {
     return Array.from(this.documents.values()).filter(
       (doc) => doc.userId === userId,
     );
   }
 
-  upsertReminder(reminder: ReminderConfig) {
+  async upsertReminder(reminder: ReminderConfig) {
     this.reminders.set(reminder.reminderId, reminder);
     return reminder;
   }
 
-  listReminders(userId: string) {
+  async listReminders(userId: string) {
     return Array.from(this.reminders.values()).filter(
       (reminder) => reminder.userId === userId,
     );
   }
 
-  upsertClaim(claim: ClaimRecord) {
+  async upsertClaim(claim: ClaimRecord) {
     this.claims.set(claim.claimId, claim);
     return claim;
   }
 
-  upsertDenial(denial: DenialRecord) {
+  async upsertDenial(denial: DenialRecord) {
     this.denials.set(denial.denialId, denial);
     return denial;
   }
 
-  getAnalyticsSummary() {
+  async getAnalyticsSummary() {
     const now = new Date().toISOString();
     return {
       generatedAt: now,

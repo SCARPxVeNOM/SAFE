@@ -12,9 +12,16 @@ const envSchema = z.object({
   GRAPH_DB_URI: z.string().optional(),
   GRAPH_DB_USER: z.string().optional(),
   GRAPH_DB_PASSWORD: z.string().optional(),
+  MONGODB_URI: z.string().optional(),
+  MONGODB_DB_NAME: z.string().optional(),
+  NEXTAUTH_URL: z.string().optional(),
+  NEXTAUTH_SECRET: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
+  FCM_SERVER_KEY: z.string().optional(),
   DEFAULT_REMINDER_OFFSETS: z
     .string()
     .default('30,7,3,1')

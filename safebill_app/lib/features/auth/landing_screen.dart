@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../app/theme.dart';
 import '../../app/theme_toggle.dart';
 import '../../app/widgets/bouncing_button.dart';
+import '../../core/providers/auth_provider.dart';
 import '../locker/locker_screen.dart';
 import '../merchant/merchant_dashboard_screen.dart';
 
@@ -82,288 +83,379 @@ class LandingScreen extends ConsumerWidget {
 
           SafeArea(
             child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Top Bar with Theme Toggle
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: const ThemeToggleButton(),
-                    ),
-                    const SizedBox(height: 40),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
+                  final isDesktop = width >= 1200;
+                  final isTablet = width >= 900 && width < 1200;
+                  final isMobile = width < 900;
+                  final showHeroSide = isDesktop;
+                  final showHeroStacked = isTablet;
+                  final cardPadding = isMobile
+                      ? 20.0
+                      : isTablet
+                          ? 28.0
+                          : 32.0;
+                  final horizontalPadding = isMobile ? 16.0 : 24.0;
+                  final logoSize = isMobile ? 64.0 : 80.0;
+                  final heroHeight = isMobile ? 220.0 : 320.0;
+                  final maxContentWidth = isDesktop ? 1200.0 : 1000.0;
 
-                    // Logo / Brand
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isDark
-                              ? [SafeBillTheme.indigo600, SafeBillTheme.indigo500]
-                              : [SafeBillTheme.indigo500, SafeBillTheme.indigo600],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  final formContent = ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: const ThemeToggleButton(),
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: SafeBillTheme.indigo500.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        LucideIcons.shieldCheck,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    )
-                        .animate()
-                        .scale(duration: 600.ms, curve: Curves.easeOutBack)
-                        .fadeIn(),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Welcome to SafeBill',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : SafeBillTheme.slate900,
-                          ),
-                    ).animate().fadeIn().slideY(begin: 0.2, end: 0),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Manage your warranties and claims securely.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: isDark
-                                ? SafeBillTheme.slate400
-                                : SafeBillTheme.slate500,
-                          ),
-                    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
-                    const SizedBox(height: 40),
-
-                    // Login Card
-                    Container(
-                      width: double.infinity,
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? SafeBillTheme.slate900.withOpacity(0.8)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(
-                          color: isDark
-                              ? SafeBillTheme.slate700.withOpacity(0.5)
-                              : SafeBillTheme.slate200,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Toggle Consumer / Merchant
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? SafeBillTheme.slate950
-                                  : SafeBillTheme.slate100,
-                              borderRadius: BorderRadius.circular(16),
+                        SizedBox(height: isMobile ? 24 : 32),
+                        Container(
+                          width: logoSize,
+                          height: logoSize,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [
+                                      SafeBillTheme.indigo600,
+                                      SafeBillTheme.indigo500
+                                    ]
+                                  : [
+                                      SafeBillTheme.indigo500,
+                                      SafeBillTheme.indigo600
+                                    ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: Row(
-                              children: [
-                                _buildToggleItem(
-                                  context,
-                                  ref,
-                                  type: UserType.consumer,
-                                  label: 'Consumer',
-                                  isSelected: userType == UserType.consumer,
-                                ),
-                                _buildToggleItem(
-                                  context,
-                                  ref,
-                                  type: UserType.merchant,
-                                  label: 'Merchant',
-                                  isSelected: userType == UserType.merchant,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Inputs
-                          _buildTextField(
-                            context,
-                            label: userType == UserType.consumer
-                                ? 'Consumer ID'
-                                : 'Merchant ID',
-                            icon: LucideIcons.user,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            context,
-                            label: 'Password',
-                            icon: LucideIcons.lock,
-                            isDark: isDark,
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Login Button
-                          BouncingButton(
-                            onTap: () {
-                              final userType = ref.read(userTypeProvider);
-                              if (userType == UserType.consumer) {
-                                context.go(LockerScreen.routePath);
-                              } else {
-                                context.go(MerchantDashboardScreen.routePath);
-                              }
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    SafeBillTheme.indigo500,
-                                    SafeBillTheme.indigo600
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: SafeBillTheme.indigo500.withOpacity(0.3),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'Login',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Divider
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Divider(
-                                  color: isDark
-                                      ? SafeBillTheme.slate700
-                                      : SafeBillTheme.slate200,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  'OR',
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? SafeBillTheme.slate500
-                                        : SafeBillTheme.slate400,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Divider(
-                                  color: isDark
-                                      ? SafeBillTheme.slate700
-                                      : SafeBillTheme.slate200,
-                                ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: SafeBillTheme.indigo500.withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 24),
-
-                          // Google Auth
-                          BouncingButton(
-                            onTap: () {},
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
+                          child: const Icon(
+                            LucideIcons.shieldCheck,
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                        )
+                            .animate()
+                            .scale(duration: 600.ms, curve: Curves.easeOutBack)
+                            .fadeIn(),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Welcome to SafeBill',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: isMobile ? 26 : null,
                                 color: isDark
-                                    ? SafeBillTheme.slate800
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
+                                    ? Colors.white
+                                    : SafeBillTheme.slate900,
+                              ),
+                        ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Manage your warranties and claims securely.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: isDark
+                                    ? SafeBillTheme.slate400
+                                    : SafeBillTheme.slate500,
+                              ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 200.ms)
+                            .slideY(begin: 0.2, end: 0),
+                        SizedBox(height: isMobile ? 24 : 32),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(cardPadding),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? SafeBillTheme.slate900.withOpacity(0.8)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(
+                              color: isDark
+                                  ? SafeBillTheme.slate700.withOpacity(0.5)
+                                  : SafeBillTheme.slate200,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
                                   color: isDark
-                                      ? SafeBillTheme.slate700
-                                      : SafeBillTheme.slate200,
+                                      ? SafeBillTheme.slate950
+                                      : SafeBillTheme.slate100,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildToggleItem(
+                                      context,
+                                      ref,
+                                      type: UserType.consumer,
+                                      label: 'Consumer',
+                                      isSelected: userType == UserType.consumer,
+                                    ),
+                                    _buildToggleItem(
+                                      context,
+                                      ref,
+                                      type: UserType.merchant,
+                                      label: 'Merchant',
+                                      isSelected: userType == UserType.merchant,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // Mock Google Icon (just a circle/icon for now)
-                                  const Icon(
-                                    LucideIcons.chrome, // Placeholder
-                                    size: 20,
+                              const SizedBox(height: 24),
+                              _buildTextField(
+                                context,
+                                label: userType == UserType.consumer
+                                    ? 'Consumer ID'
+                                    : 'Merchant ID',
+                                icon: LucideIcons.user,
+                                isDark: isDark,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildTextField(
+                                context,
+                                label: 'Password',
+                                icon: LucideIcons.lock,
+                                isDark: isDark,
+                                obscureText: true,
+                              ),
+                              const SizedBox(height: 20),
+                              BouncingButton(
+                                onTap: () {
+                                  final userType = ref.read(userTypeProvider);
+                                  if (userType == UserType.consumer) {
+                                    context.go(LockerScreen.routePath);
+                                  } else {
+                                    context.go(MerchantDashboardScreen.routePath);
+                                  }
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        SafeBillTheme.indigo500,
+                                        SafeBillTheme.indigo600
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: SafeBillTheme.indigo500
+                                            .withOpacity(0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Continue with Google',
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    'Login',
                                     style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white
-                                          : SafeBillTheme.slate700,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Divider(
+                                      color: isDark
+                                          ? SafeBillTheme.slate700
+                                          : SafeBillTheme.slate200,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: Text(
+                                      'OR',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? SafeBillTheme.slate500
+                                            : SafeBillTheme.slate400,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(
+                                      color: isDark
+                                          ? SafeBillTheme.slate700
+                                          : SafeBillTheme.slate200,
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 20),
+                              BouncingButton(
+                                onTap: () async {
+                                  final authNotifier = ref.read(authStateProvider.notifier);
+                                  await authNotifier.signInWithGoogle();
+                                  
+                                  // Check if sign in was successful
+                                  final authState = ref.read(authStateProvider);
+                                  if (authState.isAuthenticated) {
+                                    final userType = ref.read(userTypeProvider);
+                                    if (userType == UserType.consumer) {
+                                      context.go(LockerScreen.routePath);
+                                    } else {
+                                      context.go(MerchantDashboardScreen.routePath);
+                                    }
+                                  } else if (authState.error != null) {
+                                    // Show error message
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(authState.error ?? 'Sign in failed'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? SafeBillTheme.slate800
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? SafeBillTheme.slate700
+                                          : SafeBillTheme.slate200,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        LucideIcons.chrome,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        ref.watch(authStateProvider).isLoading
+                                            ? 'Signing in...'
+                                            : 'Continue with Google',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white
+                                              : SafeBillTheme.slate700,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account? ",
+                              style: TextStyle(
+                                color: isDark
+                                    ? SafeBillTheme.slate400
+                                    : SafeBillTheme.slate600,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
-
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: isDark
-                                ? SafeBillTheme.slate400
-                                : SafeBillTheme.slate600,
-                          ),
-                        ),
-                        BouncingButton(
-                          onTap: () {},
-                          child: const Text(
-                            'Sign up',
-                            style: TextStyle(
-                              color: SafeBillTheme.indigo500,
-                              fontWeight: FontWeight.w600,
+                            BouncingButton(
+                              onTap: () {},
+                              child: const Text(
+                                'Sign up',
+                                style: TextStyle(
+                                  color: SafeBillTheme.indigo500,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          ],
+                        ).animate().fadeIn(delay: 600.ms),
                       ],
-                    ).animate().fadeIn(delay: 600.ms),
-                  ],
-                ),
-              ),
+                    ),
+                  );
+
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: 24,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxContentWidth),
+                        child: IntrinsicHeight(
+                          child: showHeroSide
+                              ? Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Padding(
+                                        padding:
+                                            EdgeInsets.only(right: isDesktop ? 32 : 24),
+                                        child: _HeroIllustration(isDark: isDark),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: formContent,
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (showHeroStacked) ...[
+                                      SizedBox(
+                                        height: heroHeight,
+                                        child: _HeroIllustration(isDark: isDark),
+                                      ),
+                                      const SizedBox(height: 24),
+                                    ],
+                                    formContent,
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  );
+            },
+          ),
             ),
           ),
         ],
@@ -467,5 +559,69 @@ class LandingScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+class _HeroIllustration extends StatelessWidget {
+  const _HeroIllustration({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(32),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  SafeBillTheme.slate900.withOpacity(0.6),
+                  SafeBillTheme.indigo600.withOpacity(0.3),
+                ]
+              : [
+                  Colors.white.withOpacity(0.9),
+                  SafeBillTheme.indigo200.withOpacity(0.3),
+                ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'img/hero_image.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 180,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.45),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 800.ms).slideX(begin: -0.05, end: 0);
   }
 }

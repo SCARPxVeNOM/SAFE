@@ -82,98 +82,108 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
           // Main Content
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [ThemeToggleButton()],
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    flex: 4,
-                    child: Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          _TiltedCard(angle: 0.05),
-                          _TiltedCard(angle: -0.05),
-                          _HeroCard()
-                              .animate()
-                              .scale(
-                                duration: 600.ms,
-                                curve: Curves.easeOutBack,
-                              )
-                              .fadeIn(duration: 600.ms),
-                        ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: const [ThemeToggleButton()],
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 320,
+                              child: Center(
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    _TiltedCard(angle: 0.05),
+                                    _TiltedCard(angle: -0.05),
+                                    _HeroCard()
+                                        .animate()
+                                        .scale(
+                                          duration: 600.ms,
+                                          curve: Curves.easeOutBack,
+                                        )
+                                        .fadeIn(duration: 600.ms),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _Badge().animate().slideX(begin: -0.2).fadeIn(),
+                                const SizedBox(height: 24),
+                                _Title()
+                                    .animate(delay: 200.ms)
+                                    .slideY(begin: 0.2)
+                                    .fadeIn(),
+                                const SizedBox(height: 24),
+                                Text(
+                                  'SafeBill organizes your messy bills. Our AI extracts warranty terms, reminds you of expiry, and helps fight denied claims.',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: SafeBillTheme.slate400,
+                                        height: 1.5,
+                                      ),
+                                ).animate(delay: 400.ms).fadeIn(),
+                                const SizedBox(height: 32),
+                                _Checklist().animate(delay: 600.ms).fadeIn(),
+                              ],
+                            ),
+                            const Spacer(),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  ref
+                                      .read(onboardingControllerProvider.notifier)
+                                      .complete();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: SafeBillTheme.slate950,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Start Scanning Free',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Icon(LucideIcons.arrowRight, size: 18),
+                                  ],
+                                ),
+                              ),
+                            ).animate(delay: 800.ms).slideY(begin: 1).fadeIn(),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  Expanded(
-                    flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _Badge().animate().slideX(begin: -0.2).fadeIn(),
-                        const SizedBox(height: 24),
-                        _Title()
-                            .animate(delay: 200.ms)
-                            .slideY(begin: 0.2)
-                            .fadeIn(),
-                        const SizedBox(height: 24),
-                        Text(
-                          'SafeBill organizes your messy bills. Our AI extracts warranty terms, reminds you of expiry, and helps fight denied claims.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: SafeBillTheme.slate400,
-                                height: 1.5,
-                              ),
-                        ).animate(delay: 400.ms).fadeIn(),
-                        const SizedBox(height: 32),
-                        _Checklist().animate(delay: 600.ms).fadeIn(),
-                        const Spacer(),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              ref
-                                  .read(onboardingControllerProvider.notifier)
-                                  .complete();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: SafeBillTheme.slate950,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Start Scanning Free',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Icon(LucideIcons.arrowRight, size: 18),
-                              ],
-                            ),
-                          ),
-                        ).animate(delay: 800.ms).slideY(begin: 1).fadeIn(),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],

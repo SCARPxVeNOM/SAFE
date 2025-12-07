@@ -1,0 +1,36 @@
+COPY THESE ENVIRONMENT VARIABLES TO RENDER DASHBOARD
+====================================================
+
+Add all these in Render Dashboard → Your Service → Environment Variables:
+
+REQUIRED VARIABLES:
+------------------
+OPENAI_API_KEY=your-openai-key
+MONGODB_URI=your-mongodb-connection-string
+MONGODB_DB_NAME=safebill
+PINECONE_API_KEY=your-pinecone-key
+PINECONE_INDEX=safebill
+GRAPH_DB_URI=your-neo4j-uri
+GRAPH_DB_USER=neo4j
+GRAPH_DB_PASSWORD=your-neo4j-password
+NEXTAUTH_SECRET=your-nextauth-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+OPTIONAL VARIABLES:
+------------------
+NODE_ENV=production
+PORT=10000 (Render sets this automatically)
+NEXTAUTH_URL=https://your-service-name.onrender.com
+FCM_SERVER_KEY=your-fcm-server-key (if using push notifications)
+DEFAULT_REMINDER_OFFSETS=30,7,3,1
+
+IMPORTANT:
+---------
+- Get values from your .env file
+- Replace "your-service-name" with your actual Render service name
+- PORT is automatically set by Render, but you can add it explicitly
+- Update NEXTAUTH_URL after deployment with your actual Render URL
+- Update Google OAuth callback URL in Google Cloud Console to:
+  https://your-service-name.onrender.com/api/auth/google/callback
+

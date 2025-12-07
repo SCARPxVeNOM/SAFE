@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { getEnv } from '../config/env';
 import { logger } from '../utils/logger';
+import { redactPII } from './piiRedaction';
 
 const env = getEnv();
 
@@ -32,11 +33,13 @@ export const upsertEmbeddings = async (params: {
     return [];
   }
 
-  const index = pinecone.Index(env.PINECONE_INDEX);
+  const index = pinecone.index(env.PINECONE_INDEX);
   const vectors = [];
 
   for (const chunk of params.chunks) {
-    const embedding = await embedText(chunk.text);
+    // Redact PII before embedding
+    const redactedText = redactPII(chunk.text);
+    const embedding = await embedText(redactedText);
     vectors.push({
       id: chunk.id,
       values: embedding,
@@ -44,7 +47,7 @@ export const upsertEmbeddings = async (params: {
         userId: params.userId,
         docId: params.docId,
         chunkIndex: chunk.index,
-        snippet: chunk.text.slice(0, 400),
+        snippet: redactedText.slice(0, 400), // Store redacted snippet
         createdAt: new Date().toISOString(),
       },
     });
@@ -63,11 +66,11 @@ export const similaritySearch = async (params: {
     logger.warn('Pinecone not configured; returning empty search results');
     return [];
   }
-  const index = pinecone.Index(env.PINECONE_INDEX);
+  const index = pinecone.index(env.PINECONE_INDEX);
   const embedding = await embedText(params.query);
   const result = await index.query({
     vector: embedding,
-    topK: params.topK ?? 3,
+    topK: Math.floor(params.topK ?? 3),
     includeMetadata: true,
   });
   return result.matches?.map((match) => ({

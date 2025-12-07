@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { scheduleExpiryReminders } from '../services/reminders';
-import { store, generateId } from '../store/inMemoryStore';
+import { store, generateId } from '../store/store';
 import type { ReminderConfig } from '../types/models';
 
 const scheduleSchema = z.object({
@@ -15,11 +15,11 @@ const scheduleSchema = z.object({
 
 export const remindersRouter = Router();
 
-remindersRouter.post('/schedule', (req, res, next) => {
+remindersRouter.post('/schedule', async (req, res, next) => {
   try {
     const body = scheduleSchema.parse(req.body);
     if (body.triggerType === 'expiry') {
-      const reminders = scheduleExpiryReminders({
+      const reminders = await scheduleExpiryReminders({
         userId: body.userId,
         docId: body.docId,
         ...(body.itemId ? { itemId: body.itemId } : {}),
@@ -38,19 +38,19 @@ remindersRouter.post('/schedule', (req, res, next) => {
       deliveryChannels: ['local'],
       status: 'scheduled',
     };
-    store.upsertReminder(reminder);
+    await store.upsertReminder(reminder);
     res.json({ ok: true, reminders: [reminder] });
   } catch (error) {
     next(error);
   }
 });
 
-remindersRouter.get('/:userId', (req, res, next) => {
+remindersRouter.get('/:userId', async (req, res, next) => {
   try {
     const { userId } = z.object({ userId: z.string().min(1) }).parse(
       req.params,
     );
-    const reminders = store.listReminders(userId);
+    const reminders = await store.listReminders(userId);
     res.json({ ok: true, reminders });
   } catch (error) {
     next(error);
