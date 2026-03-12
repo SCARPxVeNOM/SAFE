@@ -82,9 +82,6 @@ def _validate_aws_only_configuration() -> None:
         )
 
 
-_validate_aws_only_configuration()
-
-
 allowed_origins = _parse_origins(settings.cors_allowed_origins)
 allow_credentials = settings.cors_allow_credentials and "*" not in allowed_origins
 
@@ -116,6 +113,8 @@ def _should_start_local_async_extraction_worker() -> bool:
 @asynccontextmanager
 async def _lifespan(app: FastAPI):  # pragma: no cover - background loop
     _ = app
+    _validate_aws_only_configuration()
+
     stop: threading.Event | None = None
     async_stop: threading.Event | None = None
 
