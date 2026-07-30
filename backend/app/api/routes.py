@@ -5049,12 +5049,6 @@ async def ingest_image(
             ),
         )
 
-    if _metadata_looks_like_ui(strict_metadata):
-        raise HTTPException(
-            status_code=422,
-            detail="Not a bill/invoice. Please upload a valid invoice or warranty card.",
-        )
-
     has_invoice_signals = any(
         _is_meaningful_metadata_value(strict_metadata.get(key))
         for key in ("bill_id", "vendor", "total_amount", "date")
@@ -5063,11 +5057,20 @@ async def ingest_image(
         name in {"google_vision", "aws_bedrock_text", "aws_bedrock_vision", "aws_textract", "aws_textract_proxy", "manual_override"}
         for name in engines_used
     )
+
+    if _metadata_looks_like_ui(strict_metadata):
+        if not (has_invoice_signals and has_strong_invoice_engine):
+            raise HTTPException(
+                status_code=422,
+                detail="Not a bill/invoice. Please upload a valid invoice or warranty card.",
+            )
+
     if _looks_like_safebill_ui(resolved_ocr_text) or _looks_like_ui_screenshot(resolved_ocr_text):
-        raise HTTPException(
-            status_code=422,
-            detail="Not a bill/invoice. Please upload a valid invoice or warranty card.",
-        )
+        if not (has_invoice_signals and has_strong_invoice_engine):
+            raise HTTPException(
+                status_code=422,
+                detail="Not a bill/invoice. Please upload a valid invoice or warranty card.",
+            )
 
     classification = _classify_document_with_bedrock(resolved_ocr_text, filename)
     doc_is_invoice = classification.get("is_invoice") if classification else None
@@ -5075,12 +5078,13 @@ async def ingest_image(
     doc_type = str(classification.get("document_type") or "").strip().lower() if classification else ""
     is_allowed_doc_type = doc_type in {"warranty_card", "guarantee_card"}
     if doc_is_invoice is False and not is_allowed_doc_type and doc_confidence >= 0.75:
-        raise HTTPException(
-            status_code=422,
-            detail="Not a bill/invoice. Please upload a valid invoice or warranty card.",
-        )
+        if not (has_invoice_signals and has_strong_invoice_engine):
+            raise HTTPException(
+                status_code=422,
+                detail="Not a bill/invoice. Please upload a valid invoice or warranty card.",
+            )
     if doc_is_invoice is None or doc_is_invoice is False:
-        if not is_allowed_doc_type:
+        if not is_allowed_doc_type and not (has_invoice_signals and has_strong_invoice_engine):
             heuristic_is_invoice, heuristic_confidence = _heuristic_is_invoice_document(resolved_ocr_text)
             if not heuristic_is_invoice and heuristic_confidence >= 0.8:
                 raise HTTPException(
